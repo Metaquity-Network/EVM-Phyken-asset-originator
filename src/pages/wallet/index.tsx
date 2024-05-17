@@ -1,46 +1,17 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { AdminLayout } from '@/src/layout';
 import TokenPrice from '@/src/components/charts/token-price';
 import Breadcrumb from '@/src/components/Breadcrumbs/Breadcrumb';
 import { useWeb3Auth } from '@/src/hooks/useWeb3Auth';
-import PolygonZkevmRPC from '@/src/context/wallet/polygonZkevmRPC';
-import { AccountHistory } from '@/src/types/history';
 
 const Wallet: React.FC = () => {
   const router = useRouter();
   const { web3auth, provider } = useWeb3Auth();
   const [balance, setBalance] = useState<any>(null);
-  const [accounttHistory, setAccounttHistory] = useState<AccountHistory[]>();
-
-  useEffect(() => {
-    const polkaLoad = async () => {
-      if (!web3auth) {
-        console.log('web3auth not initialized yet');
-        return;
-      }
-      await web3auth.initModal();
-      if (web3auth.provider) {
-        const rpc = new PolygonZkevmRPC(web3auth.provider);
-        const address = await rpc.getAccount();
-        const history = await rpc.fetchTransactionHistory(address);
-        console.log(history);
-        const balance = await rpc.getTokenBalance();
-        setBalance(balance);
-        setAccounttHistory(history);
-      }
-    };
-
-    polkaLoad();
-  }, [web3auth, provider]);
-
-  const viewTx = (hash: string) => {
-    const url = `https://sn2-stavanger-blockscout.eu-north-2.gateway.fm/tx${hash}`;
-    window.open(url, '_blank');
-  };
+  const [accounttHistory, setAccounttHistory] = useState<any[]>();
 
   return (
     <>

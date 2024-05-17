@@ -8,6 +8,10 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useAppSelector } from '../reducers/store';
 import { useAccount, useSignMessage } from 'wagmi';
 import { useEffect, useState } from 'react';
+import Step1 from '../components/stepper/step1';
+import Step2 from '../components/stepper/step2';
+import Step3 from '../components/stepper/step3';
+import Stepper from '../components/stepper/stepper';
 
 const Home: NextPage = () => {
   const router = useRouter();
@@ -17,6 +21,79 @@ const Home: NextPage = () => {
   const [signature, setSignature] = useState<`0x${string}`>();
   const [login, setLogin] = useState<boolean>(false);
   const [user, setUser] = useState<string>();
+  const [userOnboarding, setUserOnboarding] = useState<boolean>(false);
+
+  const [currentStep, setCurrentStep] = useState(0);
+  const [formData, setFormData] = useState({
+    email: '',
+    firstName: '',
+    lastName: '',
+    dateOfBirth: '',
+    typeOfIdentification: '',
+    identificationNumber: '',
+    passportCountry: '',
+    residentCountry: '',
+    confirmation: false,
+    KYC: false,
+  });
+  const [isStepValid, setIsStepValid] = useState([false, false, false]);
+
+  const steps = [
+    {
+      title: 'Verify Email',
+      describe: 'To start, You need to enter your email address and verify it.',
+      content: (
+        <Step1
+          formData={formData}
+          setFormData={setFormData}
+          setIsValid={(valid) => {
+            if (isStepValid[0] !== valid) {
+              const newIsStepValid = [...isStepValid];
+              newIsStepValid[0] = valid;
+              setIsStepValid(newIsStepValid);
+            }
+          }}
+        />
+      ),
+      isValid: () => isStepValid[0],
+    },
+    {
+      title: 'Enter User details',
+      describe: 'You need to enter your details that will be verified against your KYC document',
+      content: (
+        <Step2
+          formData={formData}
+          setFormData={setFormData}
+          setIsValid={(valid) => {
+            if (isStepValid[1] !== valid) {
+              const newIsStepValid = [...isStepValid];
+              newIsStepValid[1] = valid;
+              setIsStepValid(newIsStepValid);
+            }
+          }}
+        />
+      ),
+      isValid: () => isStepValid[1],
+    },
+    {
+      title: 'KYC',
+      describe: "Let's verify your identity",
+      content: (
+        <Step3
+          formData={formData}
+          setFormData={setFormData}
+          setIsValid={(valid) => {
+            if (isStepValid[2] !== valid) {
+              const newIsStepValid = [...isStepValid];
+              newIsStepValid[2] = valid;
+              setIsStepValid(newIsStepValid);
+            }
+          }}
+        />
+      ),
+      isValid: () => isStepValid[2],
+    },
+  ];
 
   useEffect(() => {
     const authenticate = async () => {
@@ -65,10 +142,7 @@ const Home: NextPage = () => {
   }, [data]);
 
   useEffect(() => {
-    getUserDetails().then((user) => {
-      console.log(user);
-      // setUser(user);
-    });
+    getUserDetails();
   }, [login]);
 
   const User = () => {
@@ -80,10 +154,16 @@ const Home: NextPage = () => {
       const res = await axios.get('api/user/getUserDetails');
       if (res.status === 200) {
         const assetList = res.data;
-        console.log(assetList);
-        // setAssetPendingList(assetPendingList);
-      } else {
-        // setAssetUploadedList([]);
+        if (assetList.emailAddress) {
+          setCurrentStep(1);
+        }
+        if (assetList.firstName) {
+          setCurrentStep(2);
+        }
+        if (assetList.kycStatus === 'APPROVED') {
+          setUserOnboarding(true);
+          setCurrentStep(0);
+        }
       }
     } catch (error) {
       console.error('Error fetching user details:', error);
@@ -104,6 +184,20 @@ const Home: NextPage = () => {
     </div>
   );
 
+  const onboardUser = () => (
+    <div className="container mx-auto p-4">
+      <Stepper
+        formData={formData}
+        steps={steps}
+        currentStep={currentStep}
+        setCurrentStep={setCurrentStep}
+        setOnboarding={setUserOnboarding}
+      />
+    </div>
+  );
+
+  const userDashboard = () => <div className="container mx-auto p-4">USER DASHBOARD COMING SOON!!!</div>;
+
   return (
     <AdminLayout>
       {!isConnected ? (
@@ -120,36 +214,9 @@ const Home: NextPage = () => {
                     <User />
                   </div>
                 </div>
-                <div className="pt-3">
-                  <button
-                    className="flex flex-row w-full h-10 py-2 justify-center rounded-full bg-primary hover:bg-opacity-90 p-3 font-medium text-gray gap-3"
-                    onClick={() => router.push('upload-assets')}
-                  >
-                    <div>Finish KYC</div>
-                  </button>
-                </div>
-                <div className="pt-3 pl-3">
-                  <button
-                    className="flex flex-row w-full h-10 py-2 justify-center rounded-full bg-primary hover:bg-opacity-90 p-3 font-medium text-gray gap-3"
-                    onClick={() => router.push('create-did')}
-                  >
-                    <div>Create DID</div>
-                  </button>
-                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6 xl:grid-cols-3 2xl:gap-7.5"></div>
-            <div className="pt-10">
-              <div className="rounded-sm p-4 dark:border-strokedark dark:bg-boxdark md:p-6 xl:p-7.5 w-[95%]">
-                <div className="mb-7 items-center justify-between">
-                  <div>
-                    <h3 className="text-2xl font-semibold text-black dark:text-white">My Dashboard</h3>
-                  </div>
-                  <div className="pt-10">
-                    <p>you haven't made any investment yet</p>
-                  </div>
-                </div>
-              </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6 xl:grid-cols-3 2xl:gap-7.5"></div>
+              {userOnboarding ? userDashboard() : onboardUser()}
             </div>
           </div>
           <ToastContainer />
