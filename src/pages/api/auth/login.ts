@@ -7,16 +7,15 @@ type ResponseData = {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
-  const version = process.env.VERSION || 'v1';
   const baseURL = process.env.BASE_URL || 'http://localhost:3000';
 
   try {
-    const response = await axios.post(`${baseURL}${version}/auth/login`, req.body, {
+    const response = await axios.post(`${baseURL}/auth/login`, req.body, {
       headers: {
         'Content-Type': 'application/json',
       },
     });
-    const data = response.data.accessToken;
+    const data = response.data;
     setCookie('server-auth', JSON.stringify(data), { req, res, maxAge: 60 * 60 * 24 });
     res.status(200).json(data);
   } catch (error) {

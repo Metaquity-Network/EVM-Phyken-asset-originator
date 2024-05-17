@@ -3,7 +3,7 @@ import { NextApiRequest } from 'next';
 
 export default async function handler(req: NextApiRequest, res: any) {
   const version = process.env.VERSION || 'v1';
-  const baseURL = process.env.BASE_URL || 'http://localhost:3000';
+  const baseURL = process.env.BASE_URL || 'http://localhost:4000';
   const authToken = req.headers.cookie?.split('%22')[1];
   try {
     const response = await axios.post(`${baseURL}${version}/asset/uploadAsset`, req.body, {

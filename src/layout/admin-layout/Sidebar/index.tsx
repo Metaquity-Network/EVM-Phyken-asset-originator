@@ -16,7 +16,7 @@ import {
 } from 'react-icons/fa';
 import { useRouter } from 'next/router';
 import axios from 'axios';
-import { useAccount, useDisconnect } from 'wagmi';
+import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -125,34 +125,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     }
   }, [sidebarExpanded]);
 
-  useEffect(() => {
-    console.log('isConnected', isConnected);
-    if (isConnected) {
-      sidebarMenu.push(
-        {
-          name: 'Licenses',
-          icon: 'FaIdCardAlt',
-          pathname: '/upload-license',
-        },
-        {
-          name: 'My Assets',
-          icon: 'FaDatabase',
-          pathname: '/assets',
-        },
-        {
-          name: 'Wallet',
-          icon: 'FaWallet',
-          pathname: '/wallet',
-        },
-        {
-          name: 'Transactions',
-          icon: 'FaExchangeAlt',
-          pathname: '/transactions',
-        },
-      );
-    }
-  }, [isConnected]);
-
   const logout = async () => {
     localStorage.clear();
     sessionStorage.clear();
@@ -214,37 +186,39 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             </ul>
           </div>
 
-          <div className="py-25">
-            <ul className="mb-6 flex flex-col gap-1.5">
-              <li>
-                <Link
-                  href="/settings"
-                  className={`group relative flex items-center gap-2.5 px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark hover:rounded-full dark:hover:bg-meta-4`}
-                >
-                  <FaCog />
-                  Settings
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/support"
-                  className={`group relative flex items-center gap-2.5 px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark hover:rounded-full dark:hover:bg-meta-4`}
-                >
-                  <FaQuestionCircle />
-                  Support
-                </Link>
-              </li>
-              <li>
-                <button
-                  onClick={logout}
-                  className={`group relative flex items-center gap-2.5 px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark hover:rounded-full dark:hover:bg-meta-4`}
-                >
-                  <FaSignOutAlt />
-                  Logout
-                </button>
-              </li>
-            </ul>
-          </div>
+          {isConnected ? (
+            <div className="py-25">
+              <ul className="mb-6 flex flex-col gap-1.5">
+                <li>
+                  <Link
+                    href="/settings"
+                    className={`group relative flex items-center gap-2.5 px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark hover:rounded-full dark:hover:bg-meta-4`}
+                  >
+                    <FaCog />
+                    Settings
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/support"
+                    className={`group relative flex items-center gap-2.5 px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark hover:rounded-full dark:hover:bg-meta-4`}
+                  >
+                    <FaQuestionCircle />
+                    Support
+                  </Link>
+                </li>
+                <li>
+                  <button
+                    onClick={logout}
+                    className={`group relative flex items-center gap-2.5 px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark hover:rounded-full dark:hover:bg-meta-4`}
+                  >
+                    <FaSignOutAlt />
+                    Logout
+                  </button>
+                </li>
+              </ul>
+            </div>
+          ) : null}
         </nav>
       </div>
     </aside>
