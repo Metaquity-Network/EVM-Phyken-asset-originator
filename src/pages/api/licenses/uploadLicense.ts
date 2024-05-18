@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { NextApiRequest } from 'next';
+import { NextApiRequest, NextApiResponse } from 'next';
+import FormData from 'form-data';
 
-export default async function handler(req: NextApiRequest, res: any) {
-  const version = process.env.VERSION || 'v1';
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const baseURL = process.env.BASE_URL || 'http://localhost:4000';
   const authToken = req.headers.cookie?.split('%22')[1];
 
@@ -13,16 +13,17 @@ export default async function handler(req: NextApiRequest, res: any) {
   formData.append('country', req.body.country);
   formData.append('state', req.body.state);
   formData.append('licenseURL', req.body.licenseURL);
+
   try {
-    const response = await axios.post(`${baseURL}${version}/licenses/uploadLicense`, formData, {
+    const response = await axios.post(`${baseURL}/licenses/uploadLicense`, req.body, {
       headers: {
         accept: 'application/json',
         Authorization: 'Bearer ' + authToken,
       },
     });
-    const data = response.data;
-    res.status(200).json(data);
+    res.status(200).json(response.data);
   } catch (error: any) {
-    res.status(500).json(error.data.message);
+    console.error('Upload License Error:', error.response?.data.message);
+    res.status(500).json({ message: error.response?.data?.message || 'Internal Server Error' });
   }
 }
