@@ -11,12 +11,13 @@ import { useWeb3Auth } from '@/src/hooks/useWeb3Auth';
 import { useAppSelector } from '@/src/reducers/store';
 import axios from 'axios';
 import { ToastContainer } from 'react-toastify';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { abi } from '../../../public/contract/contract-abi';
 
 const Assets: React.FC = () => {
   const router = useRouter();
   const [openTab, setOpenTab] = useState(1);
   const { showToast } = useToast();
-  const { web3auth, provider } = useWeb3Auth();
   const [assetUploadedList, setAssetUploadedList] = useState<AssetList[]>([]);
   const [assetPendingList, setAssetPendingList] = useState<AssetList[]>([]);
   const userDetails = useAppSelector((state) => state.userDetails.value);
@@ -24,10 +25,19 @@ const Assets: React.FC = () => {
   const [allAssetList, setAllAssetList] = useState([]);
   const activeClasses = 'bg-primary text-white hover:opacity-100';
   const inactiveClasses = 'bg-gray dark:bg-meta-4 text-black dark:text-white';
-
+  const { address } = useAccount();
+  const { data: hash, isPending, writeContract } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash,
+  });
   useEffect(() => {
     getAssetList();
   }, []);
+
+  useEffect(() => {
+    console.log('hash', hash);
+    console.log('isConfirmed', isConfirmed);
+  }, [isConfirmed]);
 
   const getAssetList = async () => {
     const res = await axios.get('/api/assets/getAssets');
@@ -47,36 +57,19 @@ const Assets: React.FC = () => {
     }
   };
 
-  const User = () => {
-    if (userDetails) {
-      return <p>Welcome Back, {userDetails.username.split(' ')[0]}</p>;
-    }
-    return null;
-  };
-
   const convertToCustomFormat = (uuid: string) => {
     const parts = uuid.split('-');
     const shortenedUUID = parts[0].slice(0, 4) + '...' + parts[4].slice(-4);
     return shortenedUUID;
   };
 
-  const mintNewAsset = async () => {
-    return '';
-  };
-
   const mintAsset = async (asset: AssetList) => {
-    console.log(asset);
-    const assetDetails = (await mintNewAsset()) as unknown as object;
-    console.log('assetDetails', assetDetails);
-    showToast('NFT Minted', { type: 'success' });
-    await fetch('/api/assets/updateNFT', {
-      method: 'POST',
-      body: JSON.stringify({ ...assetDetails, id: asset._id }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    writeContract({
+      address: '0x781aE4723F8Cd3A994Bb05cFbb551E65Dc121981',
+      abi,
+      functionName: 'mint',
+      args: [address as `0x${string}`, BigInt(9)],
     });
-    getAssetList();
   };
 
   const viewPolkaTx = (hash: string) => {
@@ -201,24 +194,19 @@ const Assets: React.FC = () => {
                             <p className="text-sm "></p>
                           </div>
                           <div className="md:col-span-2">
-                            {asset.nftFractionalizationDetails ? null : asset?.nftDetails ? (
-                              <button
-                                className="h-10 w-full py-2 justify-center rounded-full bg-primary hover:bg-opacity-90 p-3 font-medium text-gray gap-3"
-                                onClick={() => router.push(`/fractionalize-asset/${asset.id}`)}
-                              >
-                                Fractionalize
-                              </button>
-                            ) : !minting ? (
-                              <button
-                                className="h-10 py-2 justify-center rounded-full bg-primary hover:bg-opacity-90 p-3 font-medium text-gray gap-3"
-                                onClick={() => mintAsset(asset)}
-                              >
-                                Mint NFT
-                              </button>
+                            {asset.nftDetails ? (
+                              <>NFT</>
                             ) : (
-                              <div>Minting...</div>
+                              <>
+                                <button
+                                  className="h-10 py-2 justify-center rounded-full bg-primary hover:bg-opacity-90 p-3 font-medium text-gray gap-3"
+                                  disabled={isPending}
+                                  onClick={() => mintAsset(asset)}
+                                >
+                                  {isPending ? 'Minting...' : 'Mint NFT'}
+                                </button>
+                              </>
                             )}
-                            <p className="text-sm "></p>
                           </div>
                         </div>
                       );

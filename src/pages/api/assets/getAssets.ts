@@ -6,7 +6,7 @@ export default async function handler(req: NextApiRequest, res: any) {
   const baseURL = process.env.BASE_URL || 'http://localhost:4000';
   const authToken = req.headers.cookie?.split('%22')[1];
   try {
-    const response = await axios.get(`${baseURL}${version}/asset/getAssets`, {
+    const response = await axios.get(`${baseURL}/asset/getAssets`, {
       headers: {
         ContentType: 'application/json',
         Authorization: 'Bearer ' + authToken,

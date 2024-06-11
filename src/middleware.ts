@@ -6,7 +6,7 @@ export default function middleware(request: NextRequest) {
   const pathname = url.pathname;
 
   // Define your known routes
-  const knownRoutes = ['/', '/dashboard', '/upload-license', '/assets', '/wallet', 'transactions'];
+  const knownRoutes = ['/', '/dashboard', '/upload-license', '/assets', '/upload-assets', '/wallet', 'transactions'];
 
   // If the request path is not in the known routes and is not a file or API route, redirect to home
   if (!knownRoutes.includes(pathname) && !pathname.startsWith('/_next') && !pathname.startsWith('/api')) {

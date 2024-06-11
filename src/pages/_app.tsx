@@ -6,14 +6,14 @@ import Head from 'next/head';
 import '@rainbow-me/rainbowkit/styles.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
-import { base, polygonMumbai, berachainTestnet, celoAlfajores, xdcTestnet } from 'wagmi/chains';
+import { base, polygonMumbai, berachainTestnet, celoAlfajores, xdcTestnet, polygonAmoy } from 'wagmi/chains';
 import { getDefaultConfig, RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import useColorMode from '../hooks/useColorMode';
 
 const config = getDefaultConfig({
   appName: 'Phyken Investor',
   projectId: 'YOUR_PROJECT_ID',
-  chains: [base, polygonMumbai, berachainTestnet, celoAlfajores, xdcTestnet],
+  chains: [base, polygonAmoy, berachainTestnet, celoAlfajores, xdcTestnet],
   ssr: true,
 });
 

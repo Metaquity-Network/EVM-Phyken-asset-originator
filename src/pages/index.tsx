@@ -1,11 +1,9 @@
-'use client';
 import { NextPage } from 'next';
 import { AdminLayout } from '../layout';
 import { useRouter } from 'next/router';
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useAppSelector } from '../reducers/store';
 import { useAccount, useSignMessage } from 'wagmi';
 import { useEffect, useState } from 'react';
 import Step1 from '../components/stepper/step1';
@@ -20,7 +18,6 @@ const Home: NextPage = () => {
   const [message, setMessage] = useState('');
   const [signature, setSignature] = useState<`0x${string}`>();
   const [login, setLogin] = useState<boolean>(false);
-  const [user, setUser] = useState<string>();
   const [userOnboarding, setUserOnboarding] = useState<boolean>(false);
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -129,7 +126,7 @@ const Home: NextPage = () => {
   }, [signature, address]);
 
   useEffect(() => {
-    if (isConnected && !signature) {
+    if (isConnected && address && !signature) {
       const message = `Sign this message to authenticate with Phyken. Address: ${address}`;
       signMessage({ message });
     }
