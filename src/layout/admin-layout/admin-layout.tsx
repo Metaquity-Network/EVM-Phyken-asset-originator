@@ -22,7 +22,6 @@ export default function AdminLayout({ children }: PropsWithChildren) {
         setSignature(storedSignature as `0x${string}`);
       } else if (signature) {
         try {
-          console.log('here');
           const response = await axios.post('/api/auth/login', {
             address: address,
             signature: signature,
