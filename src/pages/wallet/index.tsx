@@ -5,11 +5,9 @@ import { useRouter } from 'next/navigation';
 import { AdminLayout } from '@/src/layout';
 import TokenPrice from '@/src/components/charts/token-price';
 import Breadcrumb from '@/src/components/Breadcrumbs/Breadcrumb';
-import { useWeb3Auth } from '@/src/hooks/useWeb3Auth';
 
 const Wallet: React.FC = () => {
   const router = useRouter();
-  const { web3auth, provider } = useWeb3Auth();
   const [balance, setBalance] = useState<any>(null);
   const [accounttHistory, setAccounttHistory] = useState<any[]>();
 

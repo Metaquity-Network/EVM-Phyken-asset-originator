@@ -7,7 +7,9 @@ const nextConfig = {
   },
   env: {
     BASE_URL: process.env.BASE_URL,
-    NEXT_APP_PROJECT_ID: process.env.NEXT_APP_PROJECT_ID
+    NEXT_APP_PROJECT_ID: process.env.NEXT_APP_PROJECT_ID,
+    EXPLORER_URL: process.env.EXPLORER_URL,
+    NFT_CONTRACT_ADDRESS: process.env.NFT_CONTRACT_ADDRESS,
   },
 };
 

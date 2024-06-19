@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { FaPlus, FaQuestionCircle } from 'react-icons/fa';
+import { FaPlus } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { AssetList } from '@/src/types/asset';
 import Link from 'next/link';
@@ -14,6 +14,8 @@ import { useAccount, useWriteContract, useReadContract, useWaitForTransactionRec
 import { abi } from '../../../public/contract/contract-abi';
 import { getTransactionConfirmations } from '@wagmi/core';
 import { config } from '@/src/config/wagmiConfig';
+import AssetTable from '@/src/components/tables/AssetTable';
+import Spinner from '@/src/components/spinner/spinner';
 
 const Assets: React.FC = () => {
   const router = useRouter();
@@ -22,50 +24,37 @@ const Assets: React.FC = () => {
   const [assetUploadedList, setAssetUploadedList] = useState<AssetList[]>([]);
   const [assetPendingList, setAssetPendingList] = useState<AssetList[]>([]);
   const userDetails = useAppSelector((state) => state.userDetails.value);
-  const [minting, setMinting] = useState<boolean>(false);
-  const [allAssetList, setAllAssetList] = useState([]);
+  const [mintingAssets, setMintingAssets] = useState<Record<string, boolean>>({});
+  const [confirmedAssets, setConfirmedAssets] = useState<Record<string, boolean>>({});
+  const [allAssetList, setAllAssetList] = useState<AssetList[]>([]);
+  const [isClient, setIsClient] = useState(false);
   const activeClasses = 'bg-primary text-white hover:opacity-100';
   const inactiveClasses = 'bg-gray dark:bg-meta-4 text-black dark:text-white';
   const { address } = useAccount();
-  const {
-    data: hash,
-    error,
-    isPending,
-    writeContract,
-  } = useWriteContract({
+  const { data: hash, writeContract } = useWriteContract({
     config: config,
   });
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+  const { isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash,
   });
 
-  const contractConfig = {
-    addressOrName: '0xb0F33BDD609209CDF646Ec617e447AAc0bbe636C',
-    contractInterface: abi,
-  };
+  const CONTRACT_ADDRESS = process.env.NFT_CONTRACT_ADDRESS as `0x${string}`;
 
   useEffect(() => {
     getAssetList();
+    setIsClient(true);
   }, []);
 
-  const CONTRACT_ADDRESS = '0xb0F33BDD609209CDF646Ec617e447AAc0bbe636C';
-
-  const { data: tokenURI } = useReadContract({
-    ...contractConfig,
-    abi,
-    address: CONTRACT_ADDRESS,
-    functionName: 'tokenURI',
-    args: [BigInt(1)],
-  });
-
   useEffect(() => {
-    console.log({ tokenURI });
-  }, [tokenURI]);
-
-  useEffect(() => {
-    console.log('hash', hash);
-    console.log('isConfirmed', isConfirmed);
-  }, [isConfirmed]);
+    if (hash && isConfirmed) {
+      console.log('isConfirmed', isConfirmed);
+      const assetId = Object.keys(mintingAssets).find((id) => mintingAssets[id] === true);
+      if (assetId) {
+        setConfirmedAssets((prev) => ({ ...prev, [assetId]: true }));
+        setMintingAssets((prev) => ({ ...prev, [assetId]: false }));
+      }
+    }
+  }, [hash, isConfirmed]);
 
   const getAssetList = async () => {
     const res = await axios.get('/api/assets/getAssets');
@@ -92,32 +81,37 @@ const Assets: React.FC = () => {
   };
 
   const mintAsset = async (asset: AssetList) => {
-    console.log(tokenURI);
     try {
-      writeContract({
+      setMintingAssets((prev) => ({ ...prev, [asset.id]: true }));
+      await writeContract({
         abi,
         address: CONTRACT_ADDRESS,
         functionName: 'mint',
         args: [address as `0x${string}`],
       });
-      console.log(hash);
-
-      const transaction = await getTransactionConfirmations(config, {
-        hash: hash as `0x${string}`,
-      });
-
-      console.log(transaction);
     } catch (error) {
       console.log(error);
-    } finally {
-      //
+      setMintingAssets((prev) => ({ ...prev, [asset.id]: false }));
     }
   };
 
-  const viewPolkaTx = (hash: string) => {
-    const url = `https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.testnet.metaquity.xyz#/explorer/query/${hash}`;
+  const viewTx = (hash: string) => {
+    const url = `${process.env.EXPLORER_URL}${hash}`;
     window.open(url, '_blank');
   };
+
+  if (!isClient) {
+    return (
+      <AdminLayout>
+        <div className="rounded-sm p-4 dark:border-strokedark dark:bg-boxdark md:p-6 xl:p-7.5 w-[95%]">
+          <div className="mb-7 flex flex-row items-start justify-between">
+            <h3 className="text-2xl font-semibold text-black dark:text-white">All Assets</h3>
+          </div>
+          <p>Loading....</p>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <>
@@ -170,290 +164,34 @@ const Assets: React.FC = () => {
 
           <div>
             <div className={`leading-relaxed ${openTab === 1 ? 'block' : 'hidden'}`}>
-              <div className="rounded-sm p-4 dark:border-strokedark dark:bg-boxdark  w-[95%]">
-                {allAssetList.length > 0 ? (
-                  <div className="flex flex-col gap-2">
-                    <div className="grid md:grid-cols-12 grid-cols-6 py-2 text-start md:text-left">
-                      <div className="md:col-span-2 hidden md:block">
-                        <p className="text-l px-4 font-bold">AssetD</p>
-                      </div>
-                      <div className="col-span-2 ">
-                        <p className="text-l font-bold">Name</p>
-                      </div>
-                      <div className="col-span-2 hidden md:block">
-                        <p className="text-l  font-bold">Category</p>
-                      </div>
-                      <div className="md:col-span-2 hidden md:block">
-                        <p className="text-l font-bold">Price</p>
-                      </div>
-                      <div className="md:col-span-2 flex">
-                        <p className=" text-l font-bold pr-2">Status</p>
-                        <div className="group relative inline-block">
-                          <FaQuestionCircle />
-                          <div className="absolute bottom-full left-1/2 z-20 mb-3 -translate-x-1/2 whitespace-nowrap rounded bg-black py-1.5 px-4.5 text-sm font-medium text-white opacity-0 group-hover:opacity-100">
-                            <span className="absolute bottom-[-3px] left-1/2 -z-10 h-2 w-2 -translate-x-1/2 rotate-45 rounded-sm bg-black"></span>
-                            Link to blockchain tx
-                          </div>
-                        </div>
-                      </div>
-                      <div className="md:col-span-2">
-                        <p className="text-l font-bold">{}</p>
-                      </div>
-                    </div>
-                    {allAssetList.map((asset: AssetList, index: number) => {
-                      return (
-                        <div key={index} className="grid md:grid-cols-12 grid-cols-6 py-2 text-start md:text-left">
-                          <div className="md:col-span-2 hidden md:block">
-                            <p className="text-sm px-4">{convertToCustomFormat(asset.id)}</p>
-                          </div>
-                          <div className="col-span-2">
-                            <p className="text-sm">{asset.name}</p>
-                          </div>
-                          <div className="md:col-span-2 hidden md:block">
-                            <p className="text-sm">{asset.category}</p>
-                          </div>
-                          <div className="md:col-span-2 hidden md:block">
-                            <p className="text-sm ">{asset.assetPrice}</p>
-                          </div>
-                          <div className="md:col-span-2">
-                            {asset.nftFractionalizationDetails ? (
-                              <p
-                                className="text-sm hover:cursor-pointer"
-                                onClick={() =>
-                                  viewPolkaTx(asset.nftFractionalizationDetails.fractionalizationBlockMint)
-                                }
-                              >
-                                Asset Fractionalized
-                              </p>
-                            ) : asset?.nftDetails ? (
-                              <p
-                                className="text-sm hover:cursor-pointer"
-                                onClick={() => viewPolkaTx(asset.nftDetails.nftBlockMint)}
-                              >
-                                NFT Minted
-                              </p>
-                            ) : null}
-                            <p className="text-sm "></p>
-                          </div>
-                          <div className="md:col-span-2">
-                            {asset.nftDetails ? (
-                              <>NFT</>
-                            ) : (
-                              <>
-                                <button
-                                  className="h-10 py-2 justify-center rounded-full bg-primary hover:bg-opacity-90 p-3 font-medium text-gray gap-3"
-                                  disabled={isPending}
-                                  onClick={() => mintAsset(asset)}
-                                >
-                                  {isPending ? 'Minting...' : 'Mint NFT'}
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    <p>No assets uploaded</p>
-                  </div>
-                )}
-              </div>
+              <AssetTable
+                assets={allAssetList}
+                convertToCustomFormat={convertToCustomFormat}
+                mintAsset={mintAsset}
+                viewTx={viewTx}
+                mintingAssets={mintingAssets}
+                confirmedAssets={confirmedAssets}
+              />
             </div>
             <div className={`leading-relaxed ${openTab === 2 ? 'block' : 'hidden'}`}>
-              <div className="rounded-sm p-4 dark:border-strokedark dark:bg-boxdark  w-[95%]">
-                {assetUploadedList.length > 0 ? (
-                  <div className="flex flex-col gap-2">
-                    <div className="grid md:grid-cols-12 grid-cols-6 py-2 text-start md:text-left">
-                      <div className="md:col-span-2 hidden md:block">
-                        <p className="text-l px-4 font-bold">AssetD</p>
-                      </div>
-                      <div className="col-span-2 ">
-                        <p className="text-l font-bold">Name</p>
-                      </div>
-                      <div className="col-span-2 hidden md:block">
-                        <p className="text-l  font-bold">Category</p>
-                      </div>
-                      <div className="md:col-span-2 hidden md:block">
-                        <p className="text-l font-bold">Price</p>
-                      </div>
-                      <div className="md:col-span-2 flex">
-                        <p className=" text-l font-bold pr-2">Status</p>
-                        <div className="group relative inline-block">
-                          <FaQuestionCircle />
-                          <div className="absolute bottom-full left-1/2 z-20 mb-3 -translate-x-1/2 whitespace-nowrap rounded bg-black py-1.5 px-4.5 text-sm font-medium text-white opacity-0 group-hover:opacity-100">
-                            <span className="absolute bottom-[-3px] left-1/2 -z-10 h-2 w-2 -translate-x-1/2 rotate-45 rounded-sm bg-black"></span>
-                            Link to blockchain tx
-                          </div>
-                        </div>
-                      </div>
-                      <div className="md:col-span-2">
-                        <p className="text-l font-bold">{}</p>
-                      </div>
-                    </div>
-                    {assetUploadedList.map((asset: AssetList, index: number) => {
-                      return (
-                        <div key={index} className="grid md:grid-cols-12 grid-cols-6 py-2 text-start md:text-left">
-                          <div className="md:col-span-2 hidden md:block">
-                            <p className="text-sm px-4">{convertToCustomFormat(asset.id)}</p>
-                          </div>
-                          <div className="col-span-2">
-                            <p className="text-sm">{asset.name}</p>
-                          </div>
-                          <div className="md:col-span-2 hidden md:block">
-                            <p className="text-sm">{asset.category}</p>
-                          </div>
-                          <div className="md:col-span-2 hidden md:block">
-                            <p className="text-sm ">{asset.assetPrice}</p>
-                          </div>
-                          <div className="md:col-span-2">
-                            {asset.nftFractionalizationDetails ? (
-                              <p
-                                className="text-sm hover:cursor-pointer"
-                                onClick={() =>
-                                  viewPolkaTx(asset.nftFractionalizationDetails.fractionalizationBlockMint)
-                                }
-                              >
-                                Asset Fractionalized
-                              </p>
-                            ) : asset?.nftDetails ? (
-                              <p
-                                className="text-sm hover:cursor-pointer"
-                                onClick={() => viewPolkaTx(asset.nftDetails.nftBlockMint)}
-                              >
-                                NFT Minted
-                              </p>
-                            ) : null}
-                            <p className="text-sm "></p>
-                          </div>
-                          <div className="md:col-span-2">
-                            {asset.nftFractionalizationDetails ? null : asset?.nftDetails ? (
-                              <button
-                                className="h-10 w-full py-2 justify-center rounded-full bg-primary hover:bg-opacity-90 p-3 font-medium text-gray gap-3"
-                                onClick={() => router.push(`/fractionalize-asset/${asset.id}`)}
-                              >
-                                Fractionalize
-                              </button>
-                            ) : !isConfirming ? (
-                              <button
-                                className="h-10 py-2 justify-center rounded-full bg-primary hover:bg-opacity-90 p-3 font-medium text-gray gap-3"
-                                onClick={() => mintAsset(asset)}
-                              >
-                                Mint NFT
-                              </button>
-                            ) : (
-                              <div>Minting...</div>
-                            )}
-                            <p className="text-sm "></p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    <p>No assets completed</p>
-                  </div>
-                )}
-              </div>
+              <AssetTable
+                assets={assetUploadedList}
+                convertToCustomFormat={convertToCustomFormat}
+                mintAsset={mintAsset}
+                viewTx={viewTx}
+                mintingAssets={mintingAssets}
+                confirmedAssets={confirmedAssets}
+              />
             </div>
             <div className={`leading-relaxed ${openTab === 3 ? 'block' : 'hidden'}`}>
-              <div className="rounded-sm p-4 dark:border-strokedark dark:bg-boxdark  w-[95%]">
-                {assetPendingList.length > 0 ? (
-                  <div className="flex flex-col gap-2">
-                    <div className="grid md:grid-cols-12 grid-cols-6 py-2 text-start md:text-left">
-                      <div className="md:col-span-2 hidden md:block">
-                        <p className="text-l px-4 font-bold">AssetD</p>
-                      </div>
-                      <div className="col-span-2 ">
-                        <p className="text-l font-bold">Name</p>
-                      </div>
-                      <div className="col-span-2 hidden md:block">
-                        <p className="text-l  font-bold">Category</p>
-                      </div>
-                      <div className="md:col-span-2 hidden md:block">
-                        <p className="text-l font-bold">Price</p>
-                      </div>
-                      <div className="md:col-span-2 flex">
-                        <p className=" text-l font-bold pr-2">Status</p>
-                        <div className="group relative inline-block">
-                          <FaQuestionCircle />
-                          <div className="absolute bottom-full left-1/2 z-20 mb-3 -translate-x-1/2 whitespace-nowrap rounded bg-black py-1.5 px-4.5 text-sm font-medium text-white opacity-0 group-hover:opacity-100">
-                            <span className="absolute bottom-[-3px] left-1/2 -z-10 h-2 w-2 -translate-x-1/2 rotate-45 rounded-sm bg-black"></span>
-                            Link to blockchain tx
-                          </div>
-                        </div>
-                      </div>
-                      <div className="md:col-span-2">
-                        <p className="text-l font-bold">{}</p>
-                      </div>
-                    </div>
-                    {assetPendingList.map((asset: AssetList, index: number) => {
-                      return (
-                        <div key={index} className="grid md:grid-cols-12 grid-cols-6 py-2 text-start md:text-left">
-                          <div className="md:col-span-2 hidden md:block">
-                            <p className="text-sm px-4">{convertToCustomFormat(asset.id)}</p>
-                          </div>
-                          <div className="col-span-2">
-                            <p className="text-sm">{asset.name}</p>
-                          </div>
-                          <div className="md:col-span-2 hidden md:block">
-                            <p className="text-sm">{asset.category}</p>
-                          </div>
-                          <div className="md:col-span-2 hidden md:block">
-                            <p className="text-sm ">{asset.assetPrice}</p>
-                          </div>
-                          <div className="md:col-span-2">
-                            {asset.nftFractionalizationDetails ? (
-                              <p
-                                className="text-sm hover:cursor-pointer"
-                                onClick={() =>
-                                  viewPolkaTx(asset.nftFractionalizationDetails.fractionalizationBlockMint)
-                                }
-                              >
-                                Asset Fractionalized
-                              </p>
-                            ) : asset?.nftDetails ? (
-                              <p
-                                className="text-sm hover:cursor-pointer"
-                                onClick={() => viewPolkaTx(asset.nftDetails.nftBlockMint)}
-                              >
-                                NFT Minted
-                              </p>
-                            ) : null}
-                            <p className="text-sm "></p>
-                          </div>
-                          <div className="md:col-span-2">
-                            {asset.nftFractionalizationDetails ? null : asset?.nftDetails ? (
-                              <button
-                                className="h-10 w-full py-2 justify-center rounded-full bg-primary hover:bg-opacity-90 p-3 font-medium text-gray gap-3"
-                                onClick={() => router.push(`/fractionalize-asset/${asset.id}`)}
-                              >
-                                Fractionalize
-                              </button>
-                            ) : !minting ? (
-                              <button
-                                className="h-10 py-2 justify-center rounded-full bg-primary hover:bg-opacity-90 p-3 font-medium text-gray gap-3"
-                                onClick={() => mintAsset(asset)}
-                              >
-                                Mint NFT
-                              </button>
-                            ) : (
-                              <div>Minting...</div>
-                            )}
-                            <p className="text-sm "></p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    <p>No assets pending</p>
-                  </div>
-                )}
-              </div>
+              <AssetTable
+                assets={assetPendingList}
+                convertToCustomFormat={convertToCustomFormat}
+                mintAsset={mintAsset}
+                viewTx={viewTx}
+                mintingAssets={mintingAssets}
+                confirmedAssets={confirmedAssets}
+              />
             </div>
           </div>
         </div>
