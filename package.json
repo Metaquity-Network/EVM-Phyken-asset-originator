@@ -9,10 +9,12 @@
     "lint": "next lint --fix"
   },
   "dependencies": {
+    "@celo/abis": "^11.0.0",
     "@kiltprotocol/sdk-js": "^0.35.0",
     "@polkadot/api": "^10.10.1",
     "@rainbow-me/rainbowkit": "^2.0.7",
     "@reduxjs/toolkit": "^1.9.7",
+    "@tanstack/react-query": "^5.45.1",
     "@types/aws-sdk": "^2.7.0",
     "@walletconnect/sign-client": "^2.11.0",
     "@web3auth/base": "^7.0.4",
@@ -20,13 +22,14 @@
     "apexcharts": "^3.41.1",
     "autoprefixer": "10.4.14",
     "aws-sdk": "^2.1478.0",
-    "axios": "^1.5.1",
+    "axios": "^1.7.2",
     "cookie": "^0.5.0",
     "cookies-next": "^4.0.0",
     "eslint": "8.46.0",
     "eslint-config-next": "13.4.12",
     "ethers": "^6.12.1",
     "flatpickr": "^4.6.13",
+    "FormData": "^0.10.1",
     "formidable": "^3.5.1",
     "jsvectormap": "^1.5.1",
     "localforage": "^1.10.0",
@@ -46,8 +49,8 @@
     "swiper": "^10.0.4",
     "tailwindcss": "3.3.3",
     "typescript": "5.1.6",
-    "viem": "^2.10.5",
-    "wagmi": "^2.8.7"
+    "viem": "^2.15.1",
+    "wagmi": "^2.10.2"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.8",

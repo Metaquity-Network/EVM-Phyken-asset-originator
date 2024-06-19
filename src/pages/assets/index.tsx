@@ -7,12 +7,13 @@ import { AssetList } from '@/src/types/asset';
 import Link from 'next/link';
 import { AdminLayout } from '@/src/layout';
 import { useToast } from '@/src/hooks/useToast';
-import { useWeb3Auth } from '@/src/hooks/useWeb3Auth';
 import { useAppSelector } from '@/src/reducers/store';
 import axios from 'axios';
 import { ToastContainer } from 'react-toastify';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
 import { abi } from '../../../public/contract/contract-abi';
+import { getTransactionConfirmations } from '@wagmi/core';
+import { config } from '@/src/config/wagmiConfig';
 
 const Assets: React.FC = () => {
   const router = useRouter();
@@ -26,13 +27,40 @@ const Assets: React.FC = () => {
   const activeClasses = 'bg-primary text-white hover:opacity-100';
   const inactiveClasses = 'bg-gray dark:bg-meta-4 text-black dark:text-white';
   const { address } = useAccount();
-  const { data: hash, isPending, writeContract } = useWriteContract();
+  const {
+    data: hash,
+    error,
+    isPending,
+    writeContract,
+  } = useWriteContract({
+    config: config,
+  });
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash,
   });
+
+  const contractConfig = {
+    addressOrName: '0xb0F33BDD609209CDF646Ec617e447AAc0bbe636C',
+    contractInterface: abi,
+  };
+
   useEffect(() => {
     getAssetList();
   }, []);
+
+  const CONTRACT_ADDRESS = '0xb0F33BDD609209CDF646Ec617e447AAc0bbe636C';
+
+  const { data: tokenURI } = useReadContract({
+    ...contractConfig,
+    abi,
+    address: CONTRACT_ADDRESS,
+    functionName: 'tokenURI',
+    args: [BigInt(1)],
+  });
+
+  useEffect(() => {
+    console.log({ tokenURI });
+  }, [tokenURI]);
 
   useEffect(() => {
     console.log('hash', hash);
@@ -64,12 +92,26 @@ const Assets: React.FC = () => {
   };
 
   const mintAsset = async (asset: AssetList) => {
-    writeContract({
-      address: '0x781aE4723F8Cd3A994Bb05cFbb551E65Dc121981',
-      abi,
-      functionName: 'mint',
-      args: [address as `0x${string}`, BigInt(9)],
-    });
+    console.log(tokenURI);
+    try {
+      writeContract({
+        abi,
+        address: CONTRACT_ADDRESS,
+        functionName: 'mint',
+        args: [address as `0x${string}`],
+      });
+      console.log(hash);
+
+      const transaction = await getTransactionConfirmations(config, {
+        hash: hash as `0x${string}`,
+      });
+
+      console.log(transaction);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      //
+    }
   };
 
   const viewPolkaTx = (hash: string) => {
@@ -293,7 +335,7 @@ const Assets: React.FC = () => {
                               >
                                 Fractionalize
                               </button>
-                            ) : !minting ? (
+                            ) : !isConfirming ? (
                               <button
                                 className="h-10 py-2 justify-center rounded-full bg-primary hover:bg-opacity-90 p-3 font-medium text-gray gap-3"
                                 onClick={() => mintAsset(asset)}
