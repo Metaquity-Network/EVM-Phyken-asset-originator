@@ -1,8 +1,9 @@
 import { IdentityContractAbi, IdentityContractByteCode } from '@/src/contract/IdentityContract';
+import { IdentityRegistryContractAbi } from '@/src/contract/identityRegistryContract';
 import { useToast } from '@/src/hooks/useToast';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { useAccount, useDeployContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useDeployContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 
 interface Step3Props {
   formData: any;
@@ -11,10 +12,13 @@ interface Step3Props {
 }
 
 const Step3: React.FC<Step3Props> = ({ formData, setFormData, setIsValid }) => {
+  const identityRegistryContractAddress = process.env.IDENTITY_REGISTRY_CONTRACT_ADDRESS as `0x${string}`;
+  const countryCode = process.env.COUNTRY_CODE || '91';
   const { address } = useAccount();
   const [buttonText, setButtonText] = useState('Verify Identity');
   const [identityVerified, setIdentityVerified] = useState(false);
   const { data, deployContract } = useDeployContract();
+  const { data: hash, writeContract } = useWriteContract();
   const { showToast } = useToast();
   const { isSuccess: isConfirmed, data: txData } = useWaitForTransactionReceipt({
     hash: data,
@@ -46,6 +50,13 @@ const Step3: React.FC<Step3Props> = ({ formData, setFormData, setIsValid }) => {
         setButtonText('Identity Verified');
         setIdentityVerified(true);
         showToast('Identity Verified', { type: 'success' });
+
+        writeContract({
+          abi: IdentityRegistryContractAbi,
+          address: identityRegistryContractAddress,
+          functionName: 'registerIdentity',
+          args: [address as `0x${string}`, data.identityContract, parseInt(countryCode, 10)],
+        });
       }
     } catch (error) {
       console.error('Error updating user identity:', error);
