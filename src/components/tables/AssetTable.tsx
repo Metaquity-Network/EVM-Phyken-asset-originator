@@ -76,7 +76,7 @@ const AssetTable: React.FC<AssetTableProps> = ({
                     Asset Fractionalized
                   </p>
                 ) : asset?.nftDetails ? (
-                  <p className="text-sm hover:cursor-pointer" onClick={() => viewTx(asset.nftDetails.nftBlockMint)}>
+                  <p className="text-sm hover:cursor-pointer" onClick={() => viewTx(asset.nftDetails.tokenMintingTx)}>
                     NFT Minted
                   </p>
                 ) : null}

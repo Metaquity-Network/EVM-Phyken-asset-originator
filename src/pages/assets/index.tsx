@@ -32,7 +32,7 @@ const Assets: React.FC = () => {
   const { data: hash, writeContract } = useWriteContract({
     config: config,
   });
-  const { isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+  const { isSuccess: isConfirmed, data } = useWaitForTransactionReceipt({
     hash,
   });
 
@@ -43,14 +43,36 @@ const Assets: React.FC = () => {
     setIsClient(true);
   }, []);
 
+  const updateNFTDetails = async (nftMintDetails: any) => {
+    const response = await axios.post('/api/assets/updateNFT', nftMintDetails);
+    if (response.status === 200) {
+      showToast('NFT minted', { type: 'success' });
+      getAssetList();
+    } else {
+      showToast('Error in minting NFT', { type: 'error' });
+    }
+  };
+
   useEffect(() => {
     if (hash && isConfirmed) {
       console.log('isConfirmed', isConfirmed);
+      console.log(data.transactionHash);
+      console.log(data.to);
+      console.log('tokenID', parseInt(data.logs[0].topics[3] as string, 16));
+
       const assetId = Object.keys(mintingAssets).find((id) => mintingAssets[id] === true);
       if (assetId) {
         setConfirmedAssets((prev) => ({ ...prev, [assetId]: true }));
         setMintingAssets((prev) => ({ ...prev, [assetId]: false }));
       }
+      const nftMintDetails = {
+        id: assetId,
+        tokenContract: data.to,
+        tokenID: parseInt(data.logs[0].topics[3] as string, 16).toString(),
+        tokenMintingTx: data.transactionHash,
+        nftOwner: data.from,
+      };
+      updateNFTDetails(nftMintDetails);
     }
   }, [hash, isConfirmed]);
 
