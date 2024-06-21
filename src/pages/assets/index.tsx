@@ -10,12 +10,10 @@ import { useToast } from '@/src/hooks/useToast';
 import { useAppSelector } from '@/src/reducers/store';
 import axios from 'axios';
 import { ToastContainer } from 'react-toastify';
-import { useAccount, useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
-import { abi } from '../../../public/contract/NFT-contract-abi';
-import { getTransactionConfirmations } from '@wagmi/core';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { abi } from '../../contract/NFT-contract-abi';
 import { config } from '@/src/config/wagmiConfig';
 import AssetTable from '@/src/components/tables/AssetTable';
-import Spinner from '@/src/components/spinner/spinner';
 
 const Assets: React.FC = () => {
   const router = useRouter();
