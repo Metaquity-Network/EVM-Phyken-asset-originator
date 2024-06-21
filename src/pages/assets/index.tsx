@@ -11,7 +11,7 @@ import { useAppSelector } from '@/src/reducers/store';
 import axios from 'axios';
 import { ToastContainer } from 'react-toastify';
 import { useAccount, useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
-import { abi } from '../../../public/contract/contract-abi';
+import { abi } from '../../../public/contract/NFT-contract-abi';
 import { getTransactionConfirmations } from '@wagmi/core';
 import { config } from '@/src/config/wagmiConfig';
 import AssetTable from '@/src/components/tables/AssetTable';

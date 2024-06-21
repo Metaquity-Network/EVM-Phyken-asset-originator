@@ -90,8 +90,8 @@ const UploadLicenses: React.FC = () => {
       showToast('User License uploaded', { type: 'success' });
       router.push('/');
     } catch (error: any) {
-      console.error('Server Error:', error.response?.status, error.response?.data);
-      showToast('Failed to upload license', { type: 'error' });
+      console.log('Server Error:', error.response.data.message);
+      showToast(error.response.data.message, { type: 'error' });
     }
   };
 
