@@ -13,6 +13,5 @@ export type AssetList = {
 };
 
 type NftDetails = {
-  nftBlockMint: string;
-  nftCollectionID: string;
+  tokenMintingTx: string;
 };

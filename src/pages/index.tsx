@@ -1,12 +1,9 @@
-'use client';
 import { NextPage } from 'next';
 import { AdminLayout } from '../layout';
-import { useRouter } from 'next/router';
 import axios from 'axios';
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useAppSelector } from '../reducers/store';
-import { useAccount, useSignMessage } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { useEffect, useState } from 'react';
 import Step1 from '../components/stepper/step1';
 import Step2 from '../components/stepper/step2';
@@ -14,13 +11,9 @@ import Step3 from '../components/stepper/step3';
 import Stepper from '../components/stepper/stepper';
 
 const Home: NextPage = () => {
-  const router = useRouter();
   const { address, isConnected } = useAccount();
-  const { data, signMessage } = useSignMessage();
-  const [message, setMessage] = useState('');
   const [signature, setSignature] = useState<`0x${string}`>();
   const [login, setLogin] = useState<boolean>(false);
-  const [user, setUser] = useState<string>();
   const [userOnboarding, setUserOnboarding] = useState<boolean>(false);
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -96,53 +89,11 @@ const Home: NextPage = () => {
   ];
 
   useEffect(() => {
-    const authenticate = async () => {
-      if (signature) {
-        try {
-          const response = await axios.post('/api/auth/login', {
-            address: address,
-            signature: signature,
-          });
-
-          if (response.status !== 200) {
-            setMessage('Authentication failed');
-            toast.error('Authentication failed');
-          } else {
-            setLogin(true);
-            setMessage(`Authenticated! JWT: ${response.data.token}`);
-            toast.success('Authentication successful');
-          }
-        } catch (error: any) {
-          console.error('Authentication error:', error);
-          if (error.response && error.response.data && error.response.data.message) {
-            setMessage(`Authentication failed: ${error.response.data.message}`);
-            toast.error(`Authentication failed: ${error.response.data.message}`);
-          } else {
-            setMessage('Authentication failed: An unexpected error occurred');
-            toast.error('Authentication failed: An unexpected error occurred');
-          }
-        }
-      }
-    };
-
-    authenticate();
-  }, [signature, address]);
-
-  useEffect(() => {
-    if (isConnected && !signature) {
-      const message = `Sign this message to authenticate with Phyken. Address: ${address}`;
-      signMessage({ message });
+    const storedSignature = localStorage.getItem('signature');
+    if (storedSignature) {
+      setSignature(storedSignature as `0x${string}`);
+      getUserDetails();
     }
-  }, [isConnected, address]);
-
-  useEffect(() => {
-    if (data) {
-      setSignature(data);
-    }
-  }, [data]);
-
-  useEffect(() => {
-    getUserDetails();
   }, [login]);
 
   const User = () => {

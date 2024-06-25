@@ -6,14 +6,12 @@ import Image from 'next/image';
 import { AdminLayout } from '@/src/layout';
 import Breadcrumb from '@/src/components/Breadcrumbs/Breadcrumb';
 import axios from 'axios';
-import { useWeb3Auth } from '@/src/hooks/useWeb3Auth';
 import { useToast } from '@/src/hooks/useToast';
 import { ToastContainer } from 'react-toastify';
 
 const FractionalizeAsset: React.FC = () => {
   const router = useRouter();
   const { showToast } = useToast();
-  const { web3auth, provider } = useWeb3Auth();
   const [assetDetails, setAssetDetails] = useState<any>();
   const [isDisabled, setIsDisabled] = useState<boolean>(false);
   const [numberOfFractions, setNumberOfFractions] = useState<number>(0);
@@ -38,10 +36,6 @@ const FractionalizeAsset: React.FC = () => {
   const fractionalizeAsset = async () => {
     if (numberOfFractions <= 0) {
       showToast('Please enter a valid fractionalization count', { type: 'error' });
-      return;
-    }
-    if (!web3auth) {
-      console.log('web3auth not initialized yet');
       return;
     }
     setIsDisabled(true);

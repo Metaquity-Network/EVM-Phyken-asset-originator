@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
     res.status(200).json(response.data);
   } catch (error: any) {
-    console.error('Upload License Error:', error.response?.data.message);
+    console.error('Upload License Error:', error.response.data.message);
     res.status(500).json({ message: error.response?.data?.message || 'Internal Server Error' });
   }
 }

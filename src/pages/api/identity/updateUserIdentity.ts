@@ -2,11 +2,11 @@ import axios from 'axios';
 import { NextApiRequest } from 'next';
 
 export default async function handler(req: NextApiRequest, res: any) {
-  const version = process.env.VERSION || 'v1';
   const baseURL = process.env.BASE_URL || 'http://localhost:4000';
   const authToken = req.headers.cookie?.split('%22')[1];
+  console.log(req.body);
   try {
-    const response = await axios.post(`${baseURL}/asset/uploadAsset`, req.body, {
+    const response = await axios.post(`${baseURL}/user/updateUserIdentity`, req.body, {
       headers: {
         ContentType: 'application/json',
         Authorization: 'Bearer ' + authToken,
@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: any) {
     const data = response.data;
     res.status(200).json(data);
   } catch (error: any) {
-    console.log('error', error.response.data);
-    res.status(500).json(error.response.data);
+    console.log('error', error);
+    res.status(500).json(error.response);
   }
 }

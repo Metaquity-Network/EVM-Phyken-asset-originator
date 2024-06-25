@@ -27,7 +27,7 @@ const UploadAssets: React.FC = () => {
   useEffect(() => {
     async function getAllLicense() {
       try {
-        const response: AxiosResponse = await axios.get('/api/licenses/getAllLicense');
+        const response: AxiosResponse = await axios.get('/api/licenses/getLicenses');
         setLicenseList(response.data);
         if (response.data.length > 0) {
           setFormSubmitData((prevData) => ({
@@ -68,7 +68,7 @@ const UploadAssets: React.FC = () => {
     setFile(selectedFile);
     setFormSubmitData({
       ...formSubmitData,
-      file: selectedFile,
+      // file: selectedFile,
     });
 
     // Read the selected file and display it as an image
@@ -111,21 +111,24 @@ const UploadAssets: React.FC = () => {
       if (type === 'assetImage') {
         setFormSubmitData({
           ...formSubmitData,
-          assetImageURL: `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${uuidFileName}`,
+          // assetImageURL: `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${uuidFileName}`,
+          assetImageURL: `s3://metaquity-presigned/Frame 14.png`,
         });
         showToast('Asset Image uploaded', { type: 'success' });
       }
       if (type === 'assetContract') {
         setFormSubmitData({
           ...formSubmitData,
-          assetContractURL: `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${uuidFileName}`,
+          // assetContractURL: `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${uuidFileName}`,
+          assetContractURL: `s3://metaquity-presigned/Frame 14.png`,
         });
         showToast('Asset contract file uploaded', { type: 'success' });
       }
       if (type === 'org') {
         setFormSubmitData({
           ...formSubmitData,
-          orgStructureURL: `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${uuidFileName}`,
+          // orgStructureURL: `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${uuidFileName}`,
+          orgStructureURL: `s3://metaquity-presigned/Frame 14.png`,
         });
         showToast('Organization structure file uploaded', { type: 'success' });
       }
@@ -136,6 +139,14 @@ const UploadAssets: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log(formSubmitData);
+    // TODO: remove hardcoded urls
+    setFormSubmitData({
+      ...formSubmitData,
+      assetImageURL: `s3://metaquity-presigned/Frame 14.png`,
+      orgStructureURL: `s3://metaquity-presigned/Frame 14.png`,
+      assetContractURL: `s3://metaquity-presigned/Frame 14.png`,
+    });
     try {
       const res = await fetch('/api/assets/uploadAsset', {
         method: 'POST',
