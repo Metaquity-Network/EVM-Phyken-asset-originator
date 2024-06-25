@@ -18,10 +18,13 @@ const Step3: React.FC<Step3Props> = ({ formData, setFormData, setIsValid }) => {
   const [buttonText, setButtonText] = useState('Verify Identity');
   const [identityVerified, setIdentityVerified] = useState(false);
   const { data, deployContract } = useDeployContract();
-  const { data: hash, writeContract } = useWriteContract();
+  const { data: writeContractHash, writeContract } = useWriteContract();
   const { showToast } = useToast();
   const { isSuccess: isConfirmed, data: txData } = useWaitForTransactionReceipt({
     hash: data,
+  });
+  const { isSuccess: writeContractConfirmed, data: writeContractTxData } = useWaitForTransactionReceipt({
+    hash: writeContractHash,
   });
 
   useEffect(() => {
@@ -76,6 +79,15 @@ const Step3: React.FC<Step3Props> = ({ formData, setFormData, setIsValid }) => {
     }
   }, [isConfirmed, txData]);
 
+  useEffect(() => {
+    if (writeContractTxData && writeContractTxData?.transactionHash && writeContractTxData?.contractAddress) {
+      console.log('writeContractTxData', writeContractTxData);
+      console.log('writeContractTxData?.transactionHash', txData?.transactionHash);
+      console.log('txData?.contractAddress', txData?.contractAddress);
+      showToast('Identity Added to the register ', { type: 'success' });
+    }
+  }, [writeContractConfirmed, writeContractTxData]);
+
   return (
     <div className="max-w-lg mx-auto p-4">
       <div className="grid grid-cols-3 items-center gap-4">
@@ -95,7 +107,7 @@ const Step3: React.FC<Step3Props> = ({ formData, setFormData, setIsValid }) => {
         <div className="col-span-3 flex items-center justify-center">
           <input
             type="checkbox"
-            checked={formData.kyc}
+            checked={formData.kyc || false}
             onChange={(e) => setFormData({ ...formData, kyc: e.target.checked })}
             required
             className="mr-2 rounded border-[1.5px] border-stroke font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
